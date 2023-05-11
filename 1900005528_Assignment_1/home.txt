@@ -1,0 +1,182 @@
+import 'package:flutter/material.dart';
+
+class Home extends StatefulWidget {
+  @override
+  State<Home> createState() => _HomeState();
+}
+
+class _HomeState extends State<Home> {
+  String _input = '0';
+  String _result = '0';
+  String _operator = '';
+
+  double _num1 = 0.0;
+  double _num2 = 0.0;
+
+  bool _hasDecimal = false;
+  bool _hasNegative = false;
+
+  List<String> _buttonCaptions = ['C', '+/-', '%', '/', '7', '8', '9', 'X',
+    '4', '5', '6', '-', '1', '2', '3', '+', '0', '.', 'DEL', '=',];
+
+  void __calculateResult() {
+    if (_operator.isEmpty) {
+      _result = _input;
+      return;
+    }
+    _num2 = double.parse(_input);
+    switch (_operator) {
+      case '+':
+        _result = (_num1 + _num2).toString();
+        break;
+      case '-':
+        _result = (_num1 - _num2).toString();
+        break;
+      case 'X':
+        _result = (_num1 * _num2).toString();
+        break;
+      case '/':
+        _result = (_num1 / _num2).toString();
+        break;
+      case '%':
+        _result = (_num1 % _num2).toString();
+        break;
+    }
+    _operator = '';
+    _input = _result;
+  }
+
+
+  void _onPressed(String caption) {
+    switch (caption) {
+      case 'C':
+        _input = '0';
+        _result = '0';
+        _operator = '';
+        _num1 = 0.0;
+        _num2 = 0.0;
+        _hasDecimal = false;
+        _hasNegative = false;
+        break;
+      case '+/-':
+        _hasNegative = !_hasNegative;
+        if (_input != '0') {
+          if (_hasNegative) {
+            _input = '-' + _input;
+          } else {
+            _input = _input.substring(1);
+          }
+        }
+        break;
+      case '%':
+        __calculateResult();
+        _applyOperator(caption);
+        break;
+      case 'DEL':
+        if (_input.length == 1) {
+          _input = '0';
+        } else {
+          _input = _input.substring(0, _input.length - 1);
+        }
+        break;
+      case '+':
+      case '-':
+      case 'X':
+      case '/':
+        _applyOperator(caption);
+        break;
+      case '=':
+        __calculateResult();
+        _num1 = 0.0;
+        _num2 = 0.0;
+        _hasDecimal = false;
+        break;
+      case '.':
+        if (!_hasDecimal) {
+          _input += '.';
+          _hasDecimal = true;
+        }
+        break;
+      default:
+        if (_input == '0') {
+          _input = caption;
+        } else {
+          _input += caption;
+        }
+    }
+    setState(() {
+      _result = _input;
+    });
+  }
+
+
+  void _applyOperator(String operator) {
+    __calculateResult();
+    _num1 = double.parse(_result);
+    _operator = operator;
+    _input = '0';
+    _hasDecimal = false;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text("Simple Calculator"),
+      ),
+      body: Column(
+        children: <Widget>[
+          Expanded(
+            child: SingleChildScrollView(
+              child: Container(
+                padding: EdgeInsets.all(16.0),
+                child: Column(
+                  children: <Widget>[
+                    Text(
+                      _result,
+                      style: TextStyle(
+                        fontSize: 48.0,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.right,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          Divider(),
+          Container(
+            child: GridView.builder(
+              shrinkWrap: true,
+              itemCount: _buttonCaptions.length,
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 4,
+              ),
+              itemBuilder: (BuildContext context, int index) {
+                String caption = _buttonCaptions[index];
+                return ElevatedButton(
+                  onPressed: () => _onPressed(caption),
+                  style: ElevatedButton.styleFrom(
+                    foregroundColor: Colors.white, backgroundColor: Colors.blue,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(0.0),
+                      side: BorderSide(
+                        color: Colors.black,
+                      ),
+                    ),
+                  ),
+                  child: Text(
+                    caption,
+                    style: TextStyle(
+                      fontSize: 24.0,
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }}

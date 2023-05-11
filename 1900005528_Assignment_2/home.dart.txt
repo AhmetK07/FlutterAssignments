@@ -1,0 +1,35 @@
+import 'package:flutter/material.dart';
+import 'home.dart';
+import 'players_info.dart';
+import 'game_panel.dart';
+
+void main() {
+  runApp(MyApp());
+}
+
+class MyApp extends StatefulWidget {
+  @override
+  _MyAppState createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Tic Tac Toe Game',
+      theme: ThemeData(
+        primarySwatch: Colors.green,
+      ),
+      navigatorKey: navigatorKey,
+      initialRoute: '/',
+      routes: {
+        '/': (context) => HomePage(),
+        '/players_info': (context) => PlayersInfoPage(),
+        '/game_panel': (context) => GamePanel(),
+      },
+      debugShowCheckedModeBanner: false,
+    );
+  }
+}

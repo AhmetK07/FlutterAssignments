@@ -1,0 +1,172 @@
+import 'package:flutter/material.dart';
+import 'game_panel.dart';
+
+class Heroes {
+  final String player1Name;
+  final String player2Name;
+  final int player1Score;
+  final int player2Score;
+
+  Heroes(
+      {required this.player1Name,
+        required this.player2Name,
+        required this.player1Score,
+        required this.player2Score});
+}
+
+class PlayersInfoPage extends StatefulWidget {
+  @override
+  _PlayersInfoPageState createState() => _PlayersInfoPageState();
+}
+
+class _PlayersInfoPageState extends State<PlayersInfoPage> {
+  final TextEditingController _player1Controller = TextEditingController();
+  final TextEditingController _player2Controller = TextEditingController();
+  String _player1Name = '';
+  String _player2Name = '';
+  int _player1Score = 0;
+  int _player2Score = 0;
+  List<Heroes> _heroes = [];
+
+  @override
+  void dispose() {
+    _player1Controller.dispose();
+    _player2Controller.dispose();
+    super.dispose();
+  }
+
+  void updateScores(int player1Score, int player2Score) {
+    setState(() {
+      _player1Score = player1Score;
+      _player2Score = player2Score;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Tic Tac Toe'),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                TextFormField(
+                  controller: _player1Controller,
+                  decoration: InputDecoration(
+                    labelText: 'Player 1 Name',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16.0)
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16.0),
+                      borderSide: BorderSide(color: Colors.blue),
+                    ),
+                  ),
+                  onChanged: (value) {
+                    setState(() {
+                      _player1Name = value;
+                    });
+                  },
+                ),
+                SizedBox(height: 16),
+                TextFormField(
+                  controller: _player2Controller,
+                  decoration: InputDecoration(
+                    labelText: 'Player 2 Name',
+                    border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16.0)
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16.0),
+                      borderSide: BorderSide(color: Colors.red),
+                    ),
+                  ),
+                  onChanged: (value) {
+                    setState(() {
+                      _player2Name = value;
+                    });
+                  },
+                ),
+              ],
+            ),
+            SizedBox(height: 16),
+            IconButton(
+              onPressed: () {
+                String tempName = _player1Name;
+                setState(() {
+                  _player1Name = _player2Name;
+                  _player2Name = tempName;
+                  _player1Controller.text = _player1Name;
+                  _player2Controller.text = _player2Name;
+                });
+              },
+              icon: Icon(Icons.swap_horiz),
+            ),
+            SizedBox(height: 32),
+            ElevatedButton(
+              onPressed: (_player1Name.isNotEmpty && _player2Name.isNotEmpty)
+                  ? () {
+                Navigator.pushNamed(
+                  context,
+                  '/game_panel',
+                  arguments: {
+                    'player1': _player1Name,
+                    'player2': _player2Name,
+                  },
+                ).then((value) {
+                  setState(() {
+                    _heroes.add(Heroes(
+                        player1Name: _player1Name,
+                        player2Name: _player2Name,
+                        player1Score: _player1Score,
+                        player2Score: _player2Score));
+                  });
+                });
+              }
+                  : null,
+              child: Text('Start Game'),
+            ),
+            SizedBox(height: 32),
+            Expanded(
+              child: ListView.builder(
+                itemCount: _heroes.length,
+                itemBuilder: (BuildContext context, int index) {
+                  return Dismissible(
+                    key: Key(_heroes[index].player1Name +
+                        _heroes[index].player2Name +
+                        index.toString()),
+                    onDismissed: (direction) {
+                      setState(() {
+                        _heroes.removeAt(index);
+                      });
+                      ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Dismissed')));
+                    },
+                    background: Container(color: Colors.red),
+                    child: ListTile(
+                      title: Text(_heroes[index].player1Name +
+                          ' VS ' +
+                          _heroes[index].player2Name),
+                      subtitle: Text(_heroes[index].player1Score.toString() +
+                          ' : ' +
+                          _heroes[index].player2Score.toString()),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+

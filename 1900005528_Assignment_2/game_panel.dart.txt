@@ -1,0 +1,322 @@
+import 'package:flutter/material.dart';
+
+class GamePanel extends StatefulWidget {
+  @override
+  _GamePanelState createState() => _GamePanelState();
+}
+
+class _GamePanelState extends State<GamePanel> {
+  late String _player1Name;
+  late String _player2Name;
+
+  @override
+  void initState() {
+    super.initState();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _getPlayerNames();
+  }
+
+  void _getPlayerNames() {
+    final Map<String, dynamic>? args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+    _player1Name = args?['player1'] ?? 'Player 1';
+    _player2Name = args?['player2'] ?? 'Player 2';
+  }
+
+  int currentTurn = 1;
+  int round = 1;
+  int player1Score = 0;
+  int player2Score = 0;
+  List<List<String>> boardState = [
+    ['', '', ''],
+    ['', '', ''],
+    ['', '', ''],
+  ];
+
+  void resetBoard() {
+    setState(() {
+      boardState = [
+        ['', '', ''],
+        ['', '', ''],
+        ['', '', ''],
+      ];
+      currentTurn = 1;
+      round = 1;
+      player1Score = 0;
+      player2Score = 0;
+    });
+  }
+
+  void exitGame() {
+    Navigator.pop(context);
+  }
+
+  void onMoveMade(int row, int col) {
+    setState(() {
+      if (boardState[row][col] == '') {
+        if (currentTurn == 1) {
+          boardState[row][col] = 'X';
+          currentTurn = 2;
+        } else {
+          boardState[row][col] = 'O';
+          currentTurn = 1;
+        }
+      }
+      checkWin();
+    });
+  }
+
+  void checkWin() {
+    String winner = '';
+    // Check rows
+    for (int i = 0; i < 3; i++) {
+      if (boardState[i][0] == boardState[i][1] &&
+          boardState[i][0] == boardState[i][2] &&
+          boardState[i][0] != '') {
+        winner = boardState[i][0];
+      }
+    }
+    // Check columns
+    for (int i = 0; i < 3; i++) {
+      if (boardState[0][i] == boardState[1][i] &&
+          boardState[0][i] == boardState[2][i] &&
+          boardState[0][i] != '') {
+        winner = boardState[0][i];
+      }
+    }
+    // Check diagonals
+    if (boardState[0][0] == boardState[1][1] &&
+        boardState[0][0] == boardState[2][2] &&
+        boardState[0][0] != '') {
+      winner = boardState[0][0];
+    }
+    if (boardState[0][2] == boardState[1][1] &&
+        boardState[0][2] == boardState[2][0] &&
+        boardState[0][2] != '') {
+      winner = boardState[0][2];
+    }
+
+    if (winner != '') {
+      String winningPlayer = winner == 'X' ? 'Player 1' : 'Player 2';
+      showDialog(
+        context: context,
+        builder: (context) =>
+            AlertDialog(
+              title: Text('Congratulations!'),
+              content: Text(' $winningPlayer wins!'),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                    setState(() {
+                      round++;
+                      boardState = [ ['', '', ''],
+                        ['', '', ''],
+                        ['', '', ''],
+                      ];
+                      currentTurn = 1;
+                      if (winner == 'X') {
+                        player1Score++;
+                      } else {
+                        player2Score++;
+                      }
+                    });
+                  },
+                  child: Text('OK'),
+                ),
+              ],
+            ),
+      );
+    } else if (boardState[0].indexOf('') == -1 &&
+        boardState[1].indexOf('') == -1 &&
+        boardState[2].indexOf('') == -1) {
+      round++;
+      showDialog(
+        context: context,
+        builder: (context) =>
+            AlertDialog(
+              title: Text('Draw!'),
+              content: Text('Both players earn 1 point.'),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                    setState(() {
+                      boardState = [ ['', '', ''],
+                        ['', '', ''],
+                        ['', '', ''],
+                      ];
+                      currentTurn = 1;
+                      player1Score++;
+                      player2Score++;
+                    });
+                  },
+                  child: Text('OK'),
+                ),
+              ],
+            ),
+      );
+    }
+  }
+
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Tic Tac Toe'),
+      ),
+      body: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              Column(
+                children: [
+                  Text(
+                    _player1Name,
+                    style: TextStyle(color: Colors.blue),
+                  ),
+                  SizedBox(height: 10),
+                  Text(
+                    player1Score.toString(),
+                    style: TextStyle(color: Colors.blue),
+                  ),
+                ],
+              ),
+              Column(
+                children: [
+                  Text(
+                    _player2Name,
+                    style: TextStyle(color: Colors.red),
+                  ),
+                  SizedBox(height: 10),
+                  Text(
+                    player2Score.toString(),
+                    style: TextStyle(color: Colors.red),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          SizedBox(height: 20),
+          Text('Round: $round'),
+          SizedBox(height: 10),
+          Text('Turn: ${currentTurn == 1 ? _player1Name : _player2Name}'),
+          SizedBox(height: 20),
+          Expanded(
+            child: GameBoard(onMoveMade: onMoveMade, boardState: boardState),
+          ),
+          SizedBox(height: 20),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              ElevatedButton(
+                onPressed: () {
+                  setState(() {
+                    resetBoard();
+                  });
+                },
+                child: Text('Reset'),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  exitGame();
+                },
+                child: Text('Exit'),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class GameBoard extends StatelessWidget {
+  final List<List<String>> boardState;
+  final Function onMoveMade;
+
+  GameBoard({required this.boardState, required this.onMoveMade});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: MediaQuery
+          .of(context)
+          .size
+          .height / 3,
+      decoration: BoxDecoration(
+        border: Border(
+          bottom: BorderSide(
+            color: Colors.black,
+            width: 3.0,
+          ),
+        ),
+      ),
+      child: SingleChildScrollView(
+        child: Column(
+          children: [
+            for (int i = 0; i < 3; i++)
+              Column(
+                children: [
+                  Row(
+                    children: [
+                      for (int j = 0; j < 3; j++)
+                        Container(
+                          width: MediaQuery
+                              .of(context)
+                              .size
+                              .width / 3,
+                          decoration: BoxDecoration(
+                            border: Border(
+                              right: BorderSide(
+                                color: Colors.black,
+                                width: j < 2 ? 3.0 : 0.0,
+                              ),
+                              bottom: BorderSide(
+                                color: Colors.black,
+                                width: i < 2 ? 3.0 : 0.0,
+                              ),
+                            ),
+                          ),
+                          child: TextButton(
+                            style: ButtonStyle(
+                              padding: MaterialStateProperty.all(
+                                EdgeInsets.all(16),
+                              ),
+                              shape: MaterialStateProperty.all(
+                                RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.zero,
+                                ),
+                              ),
+                              backgroundColor: MaterialStateProperty.all(
+                                Colors.white,
+                              ),
+                            ),
+                            onPressed: () => onMoveMade(i, j),
+                            child: Text(
+                              boardState[i][j],
+                              style: TextStyle(
+                                fontSize: 60,
+                                color: boardState[i][j] == 'X'
+                                    ? Colors.blue
+                                    : Colors.red,
+                              ),
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ],
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
